@@ -90,13 +90,58 @@ class GoogleDriveApi{
 
     $this->strAccessToken = $jsonToken['access_token'];
   }
+  
+  public function RenameFile($file_id = "", $new_name = ""){
+    // Create Link
+    $strUrl = $this->strApiUrl."/files/".$file_id."?supportsAllDrives=true"; //&alt=json
+    echo $strUrl."\n";
+
+    $headers = array();
+    $headers[] = "Content-Type: application/json";
+    $headers[] = "Authorization: OAuth ".urlencode($this->strAccessToken);
+    
+    echo "\n-------------------\n";
+    print_r($headers);
+    echo "\n-------------------\n";
+
+    $arrPostData = array();
+    $arrPostData['name'] = $new_name;
+    
+    //echo json_encode($arrPostData); exit;
+    
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_HEADER, false);
+    curl_setopt($ch, CURLOPT_URL, $strUrl);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PATCH");
+    //curl_setopt($ch, CURLOPT_BINARYTRANSFER, true) ;
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($arrPostData));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+    $result=curl_exec($ch);
+    curl_close ($ch);
+    
+    
+    print_r($result);
+    
+
+    $jsonData = json_decode($result,true);
+
+    return $jsonData;
+
+
+  }
 
   public function ListFileAndFolder($parentsId="root", $page=""){
 
     // List File and Folder
     $strSearch = urlencode("'{$parentsId}' in parents and trashed=false");
 
-    $strUrl = $this->strApiUrl."/files?corpora=user&orderBy=folder,name&pageToken=".$page."&q=".$strSearch;
+    //$strUrl = $this->strApiUrl."/files?corpora=user&orderBy=folder,name&pageToken=".$page."&q=".$strSearch;
+    $strUrl = $this->strApiUrl."/files?corpora=drive&orderBy=folder,name&includeItemsFromAllDrives=true&supportsAllDrives=true&pageToken=".$page."&driveId=".$parentsId;
+    
+    // https://content.googleapis.com/drive/v3/files?corpora=drive&driveId=0AMP9jb1-NdxeUk9PVA&
+    // includeItemsFromAllDrives=true&supportsAllDrives=true&key=AIzaSyAa8yy0GdcGPHdtD083HiGGx_S0vMPScDM
 
     $headers = array();
     $headers[] = "Content-Type: application/json";
